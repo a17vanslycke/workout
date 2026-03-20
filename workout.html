@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>MWF Full Body</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e8e8e8;
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 28px 16px 80px;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header { margin-bottom: 28px; }
+    .header-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      color: #fff;
+      letter-spacing: 4px;
+      line-height: 1;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #3a3a3a;
+      margin-top: 5px;
+    }
+    .save-status {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: #2a2a2a;
+      padding-top: 4px;
+      transition: color 0.4s;
+      min-width: 70px;
+      text-align: right;
+    }
+    .save-status.saved { color: #E8FF47; }
+    .rainbow-bar {
+      height: 1px;
+      background: linear-gradient(90deg, #E8FF47, #47CFFF, #FF6B47);
+      margin-top: 18px;
+      opacity: 0.3;
+      border-radius: 1px;
+    }
+
+    /* ── DAY CARD ── */
+    .day-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 24px;
+    }
+    .day-header {
+      padding: 16px 20px 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .day-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .day-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 3px;
+    }
+    .day-subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-left: auto;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; background: #111; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    th {
+      padding: 8px 8px;
+      font-family: monospace;
+      font-size: 9px;
+      color: #3a3a3a;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: center;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    th.left { text-align: left; padding-left: 10px; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.06); }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 11px 6px; vertical-align: middle; }
+    td.demo-cell { width: 52px; text-align: center; }
+    td.name-cell { padding-left: 10px; }
+    td.center { text-align: center; }
+
+    /* ── DEMO BUTTON ── */
+    .demo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1.5px solid;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    /* ── EXERCISE NAME ── */
+    .ex-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e8e8e8;
+      line-height: 1.3;
+    }
+
+    /* ── SETS/REPS BADGES ── */
+    .sets-badge {
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .reps-text {
+      font-family: monospace;
+      font-size: 12px;
+      color: #777;
+      white-space: nowrap;
+    }
+
+    /* ── TIMER BUTTON ── */
+    .timer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      color: #444;
+      font-family: monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    .timer-btn.active {
+      border-color: currentColor;
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── WEIGHT INPUT ── */
+    .weight-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: center;
+      position: relative;
+    }
+    .weight-input {
+      width: 58px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #555;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 4px 6px;
+      text-align: center;
+      outline: none;
+      transition: all 0.15s;
+      -moz-appearance: textfield;
+    }
+    .weight-input::-webkit-outer-spin-button,
+    .weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .weight-input.filled {
+      color: #fff;
+    }
+    .weight-input:focus {
+      border-color: currentColor;
+    }
+    .lbs-label {
+      font-size: 9px;
+      color: #3a3a3a;
+      font-family: monospace;
+    }
+    .saved-flash {
+      position: absolute;
+      left: calc(100% + 4px);
+      font-size: 10px;
+      font-family: monospace;
+      opacity: 0;
+      transition: opacity 0.4s;
+      white-space: nowrap;
+    }
+    .saved-flash.show { opacity: 1; }
+
+    /* ── TOTAL ── */
+    .total-badge {
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .total-dash {
+      font-family: monospace;
+      font-size: 12px;
+      color: #2a2a2a;
+    }
+
+    /* ── BETWEEN-EXERCISE ROW ── */
+    .between-row td {
+      padding: 7px 12px;
+      background: rgba(255,255,255,0.015);
+      border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    }
+    .between-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .between-label {
+      font-family: monospace;
+      font-size: 9px;
+      color: #2a2a2a;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .between-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 12px;
+      color: #444;
+      line-height: 2;
+    }
+    .footer strong { color: #666; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>MWF FULL BODY</h1>
+      <p class="subtitle">Hlivelood Smith Machine &nbsp;·&nbsp; ▶ opens exercise demo &nbsp;·&nbsp; weights save automatically</p>
+    </div>
+    <div class="save-status" id="saveStatus"></div>
+  </div>
+  <div class="rainbow-bar"></div>
+</div>
+
+<div id="workout"></div>
+
+<div class="footer">
+  <strong>Bar:</strong> 20 lbs estimated &middot; Smith bar exercises add bar to plates for Total &middot; cable/bodyweight shows weight only &nbsp;&nbsp;
+  <strong>Timers:</strong> SET REST counts down between sets &middot; NEXT EXERCISE counts down before moving on &nbsp;&nbsp;
+  <strong>Progression:</strong> Add weight when you hit the top of the rep range across all sets &nbsp;&nbsp;
+  <strong>Pull-ups:</strong> Use a band for assistance or a weight belt for overload
+</div>
+
+<script>
+const BAR = 20;
+const STORAGE_KEY = 'mwf-weights-v1';
+
+const COMPOUND = new Set([
+  'Smith Machine Bench Press','Smith Machine Overhead Press',
+  'Smith Machine Incline Press','Smith Machine Shrugs',
+  'One-Arm LAT Pulldown','Smith Machine Bent-Over Row',
+  'Smith Machine Back Squat','Smith Machine Romanian Deadlift',
+  'Smith Machine Reverse Lunge','LAT Pulldown','Cable Seated Row'
+]);
+
+const WORKOUT = [
+  {
+    day:'Monday', label:'PUSH', subtitle:'Chest · Shoulders · Triceps', accent:'#E8FF47',
+    exercises:[
+      {name:'Smith Machine Bench Press',    sets:'4',reps:'6-10',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-bench-press'},
+      {name:'Smith Machine Overhead Press', sets:'3',reps:'8-10',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-shoulder-press'},
+      {name:'Smith Machine Incline Press',  sets:'3',reps:'8-12',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-incline-bench-press'},
+      {name:'Cable Straight-Bar Pushdown',  sets:'3',reps:'10-15',     usesBar:false, link:'https://www.fitnessai.com/exercise/cable-push-down'},
+      {name:'Smith Machine Shrugs',         sets:'3',reps:'12-15',     usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-shrug'},
+    ]
+  },
+  {
+    day:'Wednesday', label:'PULL', subtitle:'Back · Biceps', accent:'#47CFFF',
+    exercises:[
+      {name:'One-Arm LAT Pulldown',         sets:'3',reps:'10-12 ea.', usesBar:false, link:'https://www.fitnessai.com/exercise/one-arm-lat-pulldown'},
+      {name:'LAT Pulldown',                 sets:'4',reps:'8-12',      usesBar:false, link:'https://www.fitnessai.com/exercise/lat-pulldown'},
+      {name:'Cable Seated Row',             sets:'3',reps:'10-12',     usesBar:false, link:'https://www.fitnessai.com/exercise/cable-row-with-lat-bar'},
+      {name:'Cable Straight-Bar Curl',      sets:'3',reps:'10-15',     usesBar:false, link:'https://www.fitnessai.com/exercise/cable-curl-with-lat-bar'},
+      {name:'Smith Machine Bent-Over Row',  sets:'3',reps:'8-10',      usesBar:true,  link:'https://www.fitnessai.com/exercise/bent-over-row'},
+    ]
+  },
+  {
+    day:'Friday', label:'LEGS & CORE', subtitle:'Quads · Hamstrings · Glutes · Core', accent:'#FF6B47',
+    exercises:[
+      {name:'Smith Machine Back Squat',         sets:'4',reps:'6-10',       usesBar:true,  link:'https://www.fitnessai.com/exercise/squat'},
+      {name:'Smith Machine Romanian Deadlift',  sets:'3',reps:'10-12',      usesBar:true,  link:'https://www.fitnessai.com/exercise/dumbbell-romanian-deadlift'},
+      {name:'Smith Machine Reverse Lunge',      sets:'3',reps:'10 ea. leg', usesBar:true,  link:'https://www.fitnessai.com/exercise/dumbbell-backwards-lunge'},
+      {name:'Smith Machine Calf Raise',         sets:'3',reps:'15-20',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-calf-raise'},
+      {name:'Cable Crunch',                     sets:'3',reps:'12-15',      usesBar:false, link:'https://www.fitnessai.com/exercise/cable-seated-crunch'},
+    ]
+  }
+];
+
+// ── Storage ──────────────────────────────────────────────────────────────────
+let weights = {};
+try { weights = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) {}
+
+let saveTimer = null;
+function scheduleGlobalSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(weights));
+      showSaved();
+    } catch(e) {}
+  }, 600);
+}
+
+function showSaved() {
+  const el = document.getElementById('saveStatus');
+  el.textContent = '✓ SAVED';
+  el.classList.add('saved');
+  setTimeout(() => { el.textContent = ''; el.classList.remove('saved'); }, 2200);
+}
+
+// ── Timers ───────────────────────────────────────────────────────────────────
+const activeTimers = {};
+
+function startTimer(btnEl, seconds, accent) {
+  const key = btnEl.dataset.key;
+  if (activeTimers[key]) {
+    clearInterval(activeTimers[key].interval);
+    delete activeTimers[key];
+    resetTimerBtn(btnEl, seconds, accent);
+    return;
+  }
+  let remaining = seconds;
+  btnEl.classList.add('active');
+  btnEl.style.color = accent;
+  btnEl.style.borderColor = accent + '99';
+  btnEl.style.background = accent + '18';
+
+  function fmt(s) {
+    return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  }
+  function tick() {
+    remaining--;
+    btnEl.textContent = '⏱ ' + fmt(remaining);
+    if (remaining <= 0) {
+      clearInterval(activeTimers[key].interval);
+      delete activeTimers[key];
+      resetTimerBtn(btnEl, seconds, accent);
+    }
+  }
+  btnEl.textContent = '⏱ ' + fmt(remaining);
+  activeTimers[key] = { interval: setInterval(tick, 1000) };
+}
+
+function resetTimerBtn(btnEl, seconds, accent) {
+  btnEl.classList.remove('active');
+  btnEl.style.color = '';
+  btnEl.style.borderColor = '';
+  btnEl.style.background = '';
+  function fmt(s) { return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  btnEl.textContent = '⏱ ' + fmt(seconds);
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  const container = document.getElementById('workout');
+  container.innerHTML = '';
+
+  WORKOUT.forEach(day => {
+    const a = day.accent;
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.style.background = '#111';
+    card.style.boxShadow = `0 4px 40px ${a}0d`;
+
+    // Day header
+    const hdr = document.createElement('div');
+    hdr.className = 'day-header';
+    hdr.style.background = `linear-gradient(135deg,${a}12 0%,transparent 65%)`;
+    hdr.innerHTML = `
+      <span class="day-name" style="color:${a}">${day.day}</span>
+      <span class="day-label">${day.label}</span>
+      <span class="day-subtitle">${day.subtitle}</span>
+    `;
+    card.appendChild(hdr);
+
+    // Table
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    const table = document.createElement('table');
+
+    // Thead
+    table.innerHTML = `
+      <thead><tr>
+        <th>DEMO</th>
+        <th class="left">EXERCISE</th>
+        <th>SETS</th>
+        <th>REPS</th>
+        <th>SET REST</th>
+        <th>PLATES/WT</th>
+        <th>TOTAL</th>
+      </tr></thead>
+    `;
+
+    const tbody = document.createElement('tbody');
+
+    day.exercises.forEach((ex, idx) => {
+      const rest = COMPOUND.has(ex.name)
+        ? {betweenSets:90, betweenExercises:120}
+        : {betweenSets:60, betweenExercises:75};
+
+      const savedVal = weights[ex.name] || '';
+      const plates = parseFloat(savedVal) || 0;
+      const total = plates > 0 ? plates + (ex.usesBar ? BAR : 0) : null;
+
+      // Exercise row
+      const tr = document.createElement('tr');
+
+      // Demo
+      const tdDemo = document.createElement('td');
+      tdDemo.className = 'demo-cell';
+      const demoBtn = document.createElement('a');
+      demoBtn.href = ex.link;
+      demoBtn.target = '_blank';
+      demoBtn.rel = 'noopener noreferrer';
+      demoBtn.className = 'demo-btn';
+      demoBtn.textContent = '▶';
+      demoBtn.style.color = a;
+      demoBtn.style.borderColor = a + '55';
+      demoBtn.style.background = a + '10';
+      demoBtn.onmouseenter = () => { demoBtn.style.background = a+'28'; demoBtn.style.borderColor = a; };
+      demoBtn.onmouseleave = () => { demoBtn.style.background = a+'10'; demoBtn.style.borderColor = a+'55'; };
+      tdDemo.appendChild(demoBtn);
+      tr.appendChild(tdDemo);
+
+      // Name
+      const tdName = document.createElement('td');
+      tdName.className = 'name-cell';
+      tdName.innerHTML = `<span class="ex-name">${ex.name}</span>`;
+      tr.appendChild(tdName);
+
+      // Sets
+      const tdSets = document.createElement('td');
+      tdSets.className = 'center';
+      tdSets.innerHTML = `<span class="sets-badge" style="color:${a};background:${a}18">${ex.sets}</span>`;
+      tr.appendChild(tdSets);
+
+      // Reps
+      const tdReps = document.createElement('td');
+      tdReps.className = 'center';
+      tdReps.innerHTML = `<span class="reps-text">${ex.reps}</span>`;
+      tr.appendChild(tdReps);
+
+      // Set rest timer
+      const tdTimer = document.createElement('td');
+      tdTimer.className = 'center';
+      const timerBtn = document.createElement('button');
+      timerBtn.className = 'timer-btn';
+      function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+      timerBtn.textContent = '⏱ ' + fmt(rest.betweenSets);
+      timerBtn.dataset.key = day.day + '-' + ex.name + '-set';
+      timerBtn.onclick = () => startTimer(timerBtn, rest.betweenSets, a);
+      tdTimer.appendChild(timerBtn);
+      tr.appendChild(tdTimer);
+
+      // Weight input
+      const tdWeight = document.createElement('td');
+      tdWeight.className = 'center';
+      const weightWrap = document.createElement('div');
+      weightWrap.className = 'weight-wrap';
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.step = '5';
+      input.placeholder = '--';
+      input.className = 'weight-input' + (savedVal ? ' filled' : '');
+      input.value = savedVal;
+      input.style.borderColor = savedVal ? a+'60' : '';
+      input.style.background = savedVal ? a+'12' : '';
+      input.style.color = savedVal ? '#fff' : '';
+
+      const flash = document.createElement('span');
+      flash.className = 'saved-flash';
+      flash.style.color = a;
+      flash.textContent = 'saved';
+
+      input.addEventListener('focus', () => {
+        input.style.borderColor = a;
+        input.style.background = a+'20';
+        input.style.color = '#fff';
+      });
+      input.addEventListener('blur', () => {
+        const v = input.value;
+        input.style.borderColor = v ? a+'60' : 'rgba(255,255,255,0.1)';
+        input.style.background = v ? a+'12' : 'rgba(255,255,255,0.04)';
+        input.style.color = v ? '#fff' : '#555';
+        if (v) input.classList.add('filled'); else input.classList.remove('filled');
+      });
+      input.addEventListener('input', () => {
+        const v = input.value;
+        weights[ex.name] = v;
+        scheduleGlobalSave();
+        // Update total cell live
+        const p = parseFloat(v) || 0;
+        const t = p > 0 ? p + (ex.usesBar ? BAR : 0) : null;
+        totalCell.innerHTML = t !== null
+          ? `<span class="total-badge" style="color:${a};background:${a}18">${t} lbs</span>`
+          : `<span class="total-dash">--</span>`;
+        // Show flash
+        flash.classList.add('show');
+        setTimeout(() => flash.classList.remove('show'), 1800);
+      });
+
+      const lbsLabel = document.createElement('span');
+      lbsLabel.className = 'lbs-label';
+      lbsLabel.textContent = 'LBS';
+
+      weightWrap.appendChild(input);
+      weightWrap.appendChild(lbsLabel);
+      weightWrap.appendChild(flash);
+      tdWeight.appendChild(weightWrap);
+      tr.appendChild(tdWeight);
+
+      // Total
+      const totalCell = document.createElement('td');
+      totalCell.className = 'center';
+      totalCell.innerHTML = total !== null
+        ? `<span class="total-badge" style="color:${a};background:${a}18">${total} lbs</span>`
+        : `<span class="total-dash">--</span>`;
+      tr.appendChild(totalCell);
+
+      tbody.appendChild(tr);
+
+      // Between-exercise row
+      if (idx < day.exercises.length - 1) {
+        const betweenTr = document.createElement('tr');
+        betweenTr.className = 'between-row';
+        const betweenTd = document.createElement('td');
+        betweenTd.colSpan = 7;
+        const inner = document.createElement('div');
+        inner.className = 'between-inner';
+        const lbl = document.createElement('span');
+        lbl.className = 'between-label';
+        lbl.textContent = 'next exercise';
+        const line = document.createElement('div');
+        line.className = 'between-line';
+        const exBtn = document.createElement('button');
+        exBtn.className = 'timer-btn';
+        exBtn.textContent = '⏱ ' + fmt(rest.betweenExercises);
+        exBtn.dataset.key = day.day + '-' + ex.name + '-ex';
+        exBtn.onclick = () => startTimer(exBtn, rest.betweenExercises, a);
+        inner.appendChild(lbl);
+        inner.appendChild(line);
+        inner.appendChild(exBtn);
+        betweenTd.appendChild(inner);
+        betweenTr.appendChild(betweenTd);
+        tbody.appendChild(betweenTr);
+      }
+    });
+
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    card.appendChild(wrap);
+    container.appendChild(card);
+  });
+}
+
+render();
+</script>
+</body>
+</html>

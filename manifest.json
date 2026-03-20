@@ -1,0 +1,22 @@
+{
+  "name": "MWF Full Body",
+  "short_name": "MWF Workout",
+  "description": "MWF Full Body Workout Tracker",
+  "start_url": "/workout.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/0a0a0a/E8FF47?text=MWF",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/0a0a0a/E8FF47?text=MWF",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

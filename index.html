@@ -531,4 +531,52 @@ function render() {
       setStaticLabel.style.pointerEvents = 'none';
       const setCountdown = document.createElement('span');
       setCountdown.textContent = fmt(setRest);
-      setCoun
+      setCountdown.style.pointerEvents = 'none';
+      setBtn.appendChild(setStaticLabel);
+      setBtn.appendChild(setCountdown);
+      setBtn.addEventListener('click', () => startTimer(setBtn, setCountdown, setRest, a));
+      timerRow.appendChild(setBtn);
+      card.appendChild(timerRow);
+
+      section.appendChild(card);
+
+      // ── Between-exercise row (with next-ex timer) ──
+      if (!isLast) {
+        const between = document.createElement('div');
+        between.className = 'between-row';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'between-label';
+        lbl.textContent = 'next exercise';
+
+        const line = document.createElement('div');
+        line.className = 'between-line';
+
+        const exBtn = document.createElement('button');
+        exBtn.className = 'timer-btn';
+        exBtn.dataset.key = day.day + '-' + ex.name + '-ex';
+        const exStaticLabel = document.createElement('span');
+        exStaticLabel.textContent = '\u23F1 Next Ex ';
+        exStaticLabel.style.pointerEvents = 'none';
+        const exCountdown = document.createElement('span');
+        exCountdown.textContent = fmt(exRest);
+        exCountdown.style.pointerEvents = 'none';
+        exBtn.appendChild(exStaticLabel);
+        exBtn.appendChild(exCountdown);
+        exBtn.addEventListener('click', () => startTimer(exBtn, exCountdown, exRest, a));
+
+        between.appendChild(lbl);
+        between.appendChild(line);
+        between.appendChild(exBtn);
+        section.appendChild(between);
+      }
+    });
+
+    container.appendChild(section);
+  });
+}
+
+render();
+</script>
+</body>
+</html>

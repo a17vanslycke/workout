@@ -8,7 +8,27 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0a">
   <title>MWF Full Body</title>
-  <link rel="manifest" href="manifest.json">
+  <script>
+    // Inline manifest to avoid path/cache issues with PWA install
+    const manifest = {
+      name: "MWF Full Body",
+      short_name: "MWF Workout",
+      description: "MWF Full Body Workout Tracker",
+      start_url: "https://a17vanslycke.github.io/workout/index.html",
+      scope: "https://a17vanslycke.github.io/workout/",
+      display: "standalone",
+      background_color: "#0a0a0a",
+      theme_color: "#0a0a0a",
+      orientation: "portrait",
+      icons: [
+        { src: "https://via.placeholder.com/192x192/0a0a0a/E8FF47?text=MWF", sizes: "192x192", type: "image/png" },
+        { src: "https://via.placeholder.com/512x512/0a0a0a/E8FF47?text=MWF", sizes: "512x512", type: "image/png" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    document.write('<link rel="manifest" href="' + url + '">');
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

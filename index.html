@@ -337,7 +337,8 @@ function scheduleGlobalSave() {
 const activeTimers = {};
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
-function startTimer(btn, seconds, accent) {
+function startTimer(btn, countdownEl, seconds, accent) {
+  // countdownEl is the <span> that shows the time — the static label never changes
   const key = btn.dataset.key;
   if (activeTimers[key]) {
     clearInterval(activeTimers[key]);
@@ -346,7 +347,7 @@ function startTimer(btn, seconds, accent) {
     btn.style.color = '';
     btn.style.borderColor = '';
     btn.style.background = '';
-    btn.textContent = '⏱ ' + fmt(seconds);
+    countdownEl.textContent = fmt(seconds);
     return;
   }
   let remaining = seconds;
@@ -354,10 +355,10 @@ function startTimer(btn, seconds, accent) {
   btn.style.color = accent;
   btn.style.borderColor = accent + '99';
   btn.style.background = accent + '18';
-  btn.textContent = '⏱ ' + fmt(remaining);
+  countdownEl.textContent = fmt(remaining);
   activeTimers[key] = setInterval(() => {
     remaining--;
-    btn.textContent = '⏱ ' + fmt(remaining);
+    countdownEl.textContent = fmt(remaining);
     if (remaining <= 0) {
       clearInterval(activeTimers[key]);
       delete activeTimers[key];
@@ -365,7 +366,7 @@ function startTimer(btn, seconds, accent) {
       btn.style.color = '';
       btn.style.borderColor = '';
       btn.style.background = '';
-      btn.textContent = '⏱ ' + fmt(seconds);
+      countdownEl.textContent = fmt(seconds);
     }
   }, 1000);
 }
@@ -459,6 +460,12 @@ function render() {
         input.style.color = '#fff';
       }
 
+      const totalLabel = document.createElement('span');
+      totalLabel.className = 'weight-label';
+      totalLabel.style.width = 'auto';
+      totalLabel.style.marginRight = '4px';
+      totalLabel.textContent = ex.usesBar ? 'Total Weight (inc. bar):' : 'Total Weight:';
+
       const totalEl = document.createElement('span');
       if (total !== null) {
         totalEl.className = 'total-badge';
@@ -498,21 +505,36 @@ function render() {
           totalEl.style.background = '';
           totalEl.textContent = '--';
         }
+        // label never needs to change
       });
 
       weightRow.appendChild(wLabel);
       weightRow.appendChild(input);
-      weightRow.appendChild(totalEl);
       card.appendChild(weightRow);
 
-      // Set rest timer only (no next-ex timer here)
+      // Total row
+      const totalRow = document.createElement('div');
+      totalRow.className = 'weight-row';
+      totalRow.style.marginBottom = '10px';
+      totalRow.appendChild(totalLabel);
+      totalRow.appendChild(totalEl);
+      card.appendChild(totalRow);
+
+      // Set rest timer — static label + countdown span so label never changes
       const timerRow = document.createElement('div');
       timerRow.className = 'timer-row';
       const setBtn = document.createElement('button');
       setBtn.className = 'timer-btn';
-      setBtn.textContent = '⏱ Set Rest ' + fmt(setRest);
       setBtn.dataset.key = day.day + '-' + ex.name + '-set';
-      setBtn.addEventListener('click', () => startTimer(setBtn, setRest, a));
+      const setStaticLabel = document.createElement('span');
+      setStaticLabel.textContent = '\u23F1 Set Rest ';
+      setStaticLabel.style.pointerEvents = 'none';
+      const setCountdown = document.createElement('span');
+      setCountdown.textContent = fmt(setRest);
+      setCountdown.style.pointerEvents = 'none';
+      setBtn.appendChild(setStaticLabel);
+      setBtn.appendChild(setCountdown);
+      setBtn.addEventListener('click', () => startTimer(setBtn, setCountdown, setRest, a));
       timerRow.appendChild(setBtn);
       card.appendChild(timerRow);
 
@@ -532,9 +554,16 @@ function render() {
 
         const exBtn = document.createElement('button');
         exBtn.className = 'timer-btn';
-        exBtn.textContent = '⏱ ' + fmt(exRest);
         exBtn.dataset.key = day.day + '-' + ex.name + '-ex';
-        exBtn.addEventListener('click', () => startTimer(exBtn, exRest, a));
+        const exStaticLabel = document.createElement('span');
+        exStaticLabel.textContent = '\u23F1 Next Ex ';
+        exStaticLabel.style.pointerEvents = 'none';
+        const exCountdown = document.createElement('span');
+        exCountdown.textContent = fmt(exRest);
+        exCountdown.style.pointerEvents = 'none';
+        exBtn.appendChild(exStaticLabel);
+        exBtn.appendChild(exCountdown);
+        exBtn.addEventListener('click', () => startTimer(exBtn, exCountdown, exRest, a));
 
         between.appendChild(lbl);
         between.appendChild(line);

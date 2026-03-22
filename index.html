@@ -333,34 +333,36 @@ function scheduleGlobalSave() {
   }, 600);
 }
 
-// ── Timers ───────────────────────────────────────────────────────────────────
+// ── Timers & Set Counters ─────────────────────────────────────────────────────
 const activeTimers = {};
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
-function startTimer(btn, countdownEl, seconds, accent) {
-  // countdownEl is the <span> that shows the time — the static label never changes
-  const key = btn.dataset.key;
+function stopTimer(key) {
   if (activeTimers[key]) {
-    clearInterval(activeTimers[key]);
-    delete activeTimers[key];
+    clearInterval(activeTimers[key].interval);
+    const { btn, countdownEl, seconds } = activeTimers[key];
     btn.classList.remove('active');
     btn.style.color = '';
     btn.style.borderColor = '';
     btn.style.background = '';
     countdownEl.textContent = fmt(seconds);
-    return;
+    delete activeTimers[key];
   }
+}
+
+function startTimer(key, btn, countdownEl, seconds, accent) {
+  stopTimer(key);
   let remaining = seconds;
   btn.classList.add('active');
   btn.style.color = accent;
   btn.style.borderColor = accent + '99';
   btn.style.background = accent + '18';
   countdownEl.textContent = fmt(remaining);
-  activeTimers[key] = setInterval(() => {
+  const interval = setInterval(() => {
     remaining--;
     countdownEl.textContent = fmt(remaining);
     if (remaining <= 0) {
-      clearInterval(activeTimers[key]);
+      clearInterval(interval);
       delete activeTimers[key];
       btn.classList.remove('active');
       btn.style.color = '';
@@ -369,6 +371,7 @@ function startTimer(btn, countdownEl, seconds, accent) {
       countdownEl.textContent = fmt(seconds);
     }
   }, 1000);
+  activeTimers[key] = { interval, btn, countdownEl, seconds };
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
@@ -399,8 +402,9 @@ function render() {
       const setRest = isCompound ? 90 : 60;
       const exRest = isCompound ? 120 : 75;
       const savedVal = weights[ex.name] || '';
-      const plates = parseFloat(savedVal) || 0;
-      const total = plates > 0 ? plates + (ex.usesBar ? BAR : 0) : null;
+      const plates = parseFloat(savedVal);
+      const hasInitVal = savedVal !== '' && savedVal !== null && savedVal !== undefined && !isNaN(plates);
+      const total = hasInitVal ? plates + (ex.usesBar ? BAR : 0) : null;
 
       // ── Exercise card ──
       const card = document.createElement('div');
@@ -492,8 +496,9 @@ function render() {
         const v = input.value;
         weights[ex.name] = v;
         scheduleGlobalSave();
-        const p = parseFloat(v) || 0;
-        const t = p > 0 ? p + (ex.usesBar ? BAR : 0) : null;
+        const p = parseFloat(v);
+        const hasValue = v !== '' && v !== null && !isNaN(p);
+        const t = hasValue ? p + (ex.usesBar ? BAR : 0) : null;
         if (t !== null) {
           totalEl.className = 'total-badge';
           totalEl.style.color = a;
@@ -520,23 +525,97 @@ function render() {
       totalRow.appendChild(totalEl);
       card.appendChild(totalRow);
 
-      // Set rest timer — static label + countdown span so label never changes
+      // Set counter + inline set rest timer
       const timerRow = document.createElement('div');
       timerRow.className = 'timer-row';
-      const setBtn = document.createElement('button');
-      setBtn.className = 'timer-btn';
-      setBtn.dataset.key = day.day + '-' + ex.name + '-set';
-      const setStaticLabel = document.createElement('span');
-      setStaticLabel.textContent = '\u23F1 Set Rest ';
-      setStaticLabel.style.pointerEvents = 'none';
-      const setCountdown = document.createElement('span');
-      setCountdown.textContent = fmt(setRest);
-      setCountdown.style.pointerEvents = 'none';
-      setBtn.appendChild(setStaticLabel);
-      setBtn.appendChild(setCountdown);
-      setBtn.addEventListener('click', () => startTimer(setBtn, setCountdown, setRest, a));
-      timerRow.appendChild(setBtn);
+      timerRow.style.alignItems = 'center';
+      timerRow.style.gap = '10px';
+
+      const totalSets = parseInt(ex.sets);
+      let setCount = 0;
+
+      // Set counter button
+      const counterBtn = document.createElement('button');
+      counterBtn.className = 'timer-btn';
+      counterBtn.style.fontWeight = '700';
+      counterBtn.style.fontSize = '12px';
+      counterBtn.style.padding = '5px 12px';
+      counterBtn.textContent = 'Set 0/' + totalSets;
+
+      // Inline set rest timer (hidden until a set is logged)
+      const setTimerBtn = document.createElement('button');
+      setTimerBtn.className = 'timer-btn';
+      setTimerBtn.style.display = 'none';
+      const setTimerStatic = document.createElement('span');
+      setTimerStatic.style.pointerEvents = 'none';
+      setTimerStatic.textContent = '\u23F1 Rest ';
+      const setTimerCountdown = document.createElement('span');
+      setTimerCountdown.style.pointerEvents = 'none';
+      setTimerCountdown.textContent = fmt(setRest);
+      setTimerBtn.appendChild(setTimerStatic);
+      setTimerBtn.appendChild(setTimerCountdown);
+      const setTimerKey = day.day + '-' + ex.name + '-set';
+      setTimerBtn.addEventListener('click', () => startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a));
+
+      counterBtn.addEventListener('click', () => {
+        if (setCount >= totalSets) return; // locked at max
+        setCount++;
+        const isMax = setCount === totalSets;
+
+        // Update counter label
+        counterBtn.textContent = 'Set ' + setCount + '/' + totalSets;
+        counterBtn.style.color = isMax ? a : '';
+        counterBtn.style.borderColor = isMax ? a + '99' : '';
+        counterBtn.style.background = isMax ? a + '18' : '';
+
+        if (isMax) {
+          // Stop set rest timer, hide it, fire next exercise timer
+          stopTimer(setTimerKey);
+          setTimerBtn.style.display = 'none';
+          // Fire the between-row next exercise timer
+          if (nextExBtn) {
+            const nextKey = day.day + '-' + ex.name + '-ex';
+            stopTimer(nextKey);
+            startTimer(nextKey, nextExBtn, nextExCountdown, exRest, a);
+          }
+        } else {
+          // Start/restart set rest timer
+          setTimerBtn.style.display = '';
+          startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a);
+        }
+
+        // If this is the last exercise of the day and it hit max, reset all counters
+        if (isMax && isLast) {
+          setTimeout(() => {
+            // Reset all counter buttons in this day section
+            section.querySelectorAll('.set-counter-btn').forEach(btn => {
+              btn.textContent = btn.dataset.resetLabel;
+              btn.style.color = '';
+              btn.style.borderColor = '';
+              btn.style.background = '';
+              btn._setCount = 0;
+            });
+            // Hide all inline timers
+            section.querySelectorAll('.set-timer-inline').forEach(t => { t.style.display = 'none'; });
+          }, 1500);
+        }
+      });
+
+      // Tag for reset
+      counterBtn.classList.add('set-counter-btn');
+      counterBtn.dataset.resetLabel = 'Set 0/' + totalSets;
+      counterBtn._setCount = 0;
+      // Patch setCount to use element property for reset
+      counterBtn.addEventListener('click', () => { counterBtn._setCount = setCount; });
+      setTimerBtn.classList.add('set-timer-inline');
+
+      timerRow.appendChild(counterBtn);
+      timerRow.appendChild(setTimerBtn);
       card.appendChild(timerRow);
+
+      // nextExBtn reference — will be set when between-row is created
+      let nextExBtn = null;
+      let nextExCountdown = null;
 
       section.appendChild(card);
 
@@ -554,7 +633,7 @@ function render() {
 
         const exBtn = document.createElement('button');
         exBtn.className = 'timer-btn';
-        exBtn.dataset.key = day.day + '-' + ex.name + '-ex';
+        const exKey = day.day + '-' + ex.name + '-ex';
         const exStaticLabel = document.createElement('span');
         exStaticLabel.textContent = '\u23F1 Next Ex ';
         exStaticLabel.style.pointerEvents = 'none';
@@ -563,7 +642,11 @@ function render() {
         exCountdown.style.pointerEvents = 'none';
         exBtn.appendChild(exStaticLabel);
         exBtn.appendChild(exCountdown);
-        exBtn.addEventListener('click', () => startTimer(exBtn, exCountdown, exRest, a));
+        exBtn.addEventListener('click', () => startTimer(exKey, exBtn, exCountdown, exRest, a));
+
+        // Wire up reference so set counter can fire this timer
+        nextExBtn = exBtn;
+        nextExCountdown = exCountdown;
 
         between.appendChild(lbl);
         between.appendChild(line);

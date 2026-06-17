@@ -7,8 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0a">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Workout Tracker</title>
   <script>
+    // ── EDIT THIS LINE with your Google Apps Script Web App URL ──
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx4Czfs191tOLkg21Wyu1XL7nzCznjyBYT9wNIMywXzp_iVwmDAVyP95K5S6ON-07GR/exec';
+
     const manifest = {
       name: "Workout Tracker",
       short_name: "Workout Tracker",
@@ -25,232 +31,73 @@
       ]
     };
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    document.write('<link rel="manifest" href="' + url + '">');
+    const murl = URL.createObjectURL(blob);
+    document.write('<link rel="manifest" href="' + murl + '">');
   </script>
-  <!-- Cache control -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      background: #0a0a0a;
-      color: #e8e8e8;
+      background: #0a0a0a; color: #e8e8e8;
       font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      padding: 28px 16px 80px;
-      max-width: 600px;
-      margin: 0 auto;
+      min-height: 100vh; padding: 28px 16px 80px;
+      max-width: 600px; margin: 0 auto;
     }
-
-    /* ── HEADER ── */
     .header { margin-bottom: 28px; }
     .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 38px;
-      color: #fff;
-      letter-spacing: 4px;
-      line-height: 1;
-    }
+    h1 { font-family: 'Bebas Neue', sans-serif; font-size: 38px; color: #fff; letter-spacing: 4px; line-height: 1; }
     .subtitle { font-size: 12px; color: #3a3a3a; margin-top: 5px; }
-    .save-status {
-      font-family: monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: transparent;
-      padding-top: 4px;
-      transition: color 0.4s;
-      white-space: nowrap;
-    }
+    .save-status { font-family: monospace; font-size: 11px; letter-spacing: 1px; color: transparent; padding-top: 4px; transition: color 0.4s; white-space: nowrap; }
     .save-status.saved { color: #E8FF47; }
-    .rainbow-bar {
-      height: 1px;
-      background: linear-gradient(90deg, #E8FF47, #47CFFF, #FF6B47);
-      margin-top: 18px;
-      opacity: 0.3;
-      border-radius: 1px;
-    }
+    .save-status.syncing { color: #47CFFF; }
+    .save-status.error { color: #FF6B47; }
+    .rainbow-bar { height: 1px; background: linear-gradient(90deg, #E8FF47, #47CFFF, #FF6B47); margin-top: 18px; opacity: 0.3; border-radius: 1px; }
 
-    /* ── DAY SECTION ── */
     .day-section { margin-bottom: 28px; }
+    .day-header { padding: 14px 16px 12px; border-radius: 12px 12px 0 0; border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .day-name { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; line-height: 1; }
+    .day-label { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: rgba(255,255,255,0.2); letter-spacing: 3px; }
+    .day-subtitle { font-size: 11px; color: rgba(255,255,255,0.3); margin-left: auto; }
 
-    .day-header {
-      padding: 14px 16px 12px;
-      border-radius: 12px 12px 0 0;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .day-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 24px;
-      letter-spacing: 2px;
-      line-height: 1;
-    }
-    .day-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px;
-      color: rgba(255,255,255,0.2);
-      letter-spacing: 3px;
-    }
-    .day-subtitle {
-      font-size: 11px;
-      color: rgba(255,255,255,0.3);
-      margin-left: auto;
-    }
-
-    /* ── EXERCISE CARD ── */
-    .exercise-card {
-      background: #111;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-top: none;
-      padding: 14px 16px;
-    }
+    .exercise-card { background: #111; border: 1px solid rgba(255,255,255,0.08); border-top: none; padding: 14px 16px; }
     .exercise-card.last { border-radius: 0 0 12px 12px; }
+    .ex-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .demo-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid; text-decoration: none; font-size: 12px; flex-shrink: 0; transition: all 0.15s; }
+    .ex-name { font-size: 14px; font-weight: 600; color: #e8e8e8; line-height: 1.3; }
+    .ex-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .sets-badge { font-family: monospace; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .reps-badge { font-family: monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #888; }
 
-    .ex-top {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .demo-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      border: 1.5px solid;
-      text-decoration: none;
-      font-size: 12px;
-      flex-shrink: 0;
-      transition: all 0.15s;
-    }
-    .ex-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #e8e8e8;
-      line-height: 1.3;
-    }
-
-    .ex-meta {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .sets-badge {
-      font-family: monospace;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .reps-badge {
-      font-family: monospace;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.06);
-      color: #888;
-    }
-
-    .weight-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .weight-label {
-      font-size: 10px;
-      color: #555;
-      font-family: monospace;
-      letter-spacing: 0.5px;
-      flex-shrink: 0;
-      width: 48px;
-    }
-    .weight-input {
-      width: 72px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      color: #555;
-      font-family: monospace;
-      font-size: 14px;
-      padding: 5px 8px;
-      text-align: center;
-      outline: none;
-      transition: all 0.15s;
-      -moz-appearance: textfield;
-    }
-    .weight-input::-webkit-outer-spin-button,
-    .weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-    .total-badge {
-      font-family: monospace;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 6px;
-      white-space: nowrap;
-    }
+    .weight-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .weight-label { font-size: 10px; color: #555; font-family: monospace; letter-spacing: 0.5px; flex-shrink: 0; width: 48px; }
+    .weight-input { width: 72px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #555; font-family: monospace; font-size: 14px; padding: 5px 8px; text-align: center; outline: none; transition: all 0.15s; -moz-appearance: textfield; }
+    .weight-input::-webkit-outer-spin-button, .weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .total-badge { font-family: monospace; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
     .total-dash { font-family: monospace; font-size: 12px; color: #2a2a2a; }
+    .total-label { font-size: 10px; color: #555; font-family: monospace; letter-spacing: 0.5px; flex-shrink: 0; }
 
-    .timer-row { display: flex; gap: 8px; }
-    .timer-btn {
-      font-family: monospace;
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.03);
-      color: #555;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-      letter-spacing: 0.3px;
-    }
+    .timer-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .timer-btn { font-family: monospace; font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #555; cursor: pointer; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.3px; }
     .timer-btn.active { border-color: currentColor; }
+    .set-counter-btn { font-weight: 700; font-size: 12px; padding: 5px 12px; }
 
-    /* ── BETWEEN ROW ── */
-    .between-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 16px;
-      background: rgba(255,255,255,0.015);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-top: none;
-    }
-    .between-label {
-      font-family: monospace;
-      font-size: 9px;
-      color: #2a2a2a;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+    .plank-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .plank-set-label { font-size: 10px; color: #555; font-family: monospace; letter-spacing: 0.5px; flex-shrink: 0; width: 48px; }
+    .plank-time-display { font-family: monospace; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; min-width: 64px; text-align: center; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #555; }
+    .plank-time-display.has-time { color: #fff; }
+    .stopwatch-btn { font-family: monospace; font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #555; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .stopwatch-btn.running { font-weight: 700; }
+
+    .reps-target-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .reps-target-label { font-size: 10px; color: #555; font-family: monospace; letter-spacing: 0.5px; flex-shrink: 0; }
+    .reps-target-input { width: 56px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #555; font-family: monospace; font-size: 13px; padding: 4px 6px; text-align: center; outline: none; transition: all 0.15s; -moz-appearance: textfield; }
+    .reps-target-input::-webkit-outer-spin-button, .reps-target-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .between-row { display: flex; align-items: center; gap: 10px; padding: 7px 16px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.08); border-top: none; }
+    .between-label { font-family: monospace; font-size: 9px; color: #2a2a2a; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
     .between-line { flex: 1; height: 1px; background: rgba(255,255,255,0.04); }
 
-    /* ── FOOTER ── */
-    .footer {
-      background: #111;
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 16px 20px;
-      font-size: 12px;
-      color: #444;
-      line-height: 2;
-      margin-top: 4px;
-    }
+    .footer { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 20px; font-size: 12px; color: #444; line-height: 2; margin-top: 4px; }
     .footer strong { color: #666; }
   </style>
 </head>
@@ -271,7 +118,8 @@
 
 <div class="footer">
   <strong>Bar:</strong> 20 lbs estimated &middot; Smith bar exercises add bar to plates for Total &middot; cable/bodyweight shows weight only &nbsp;&nbsp;
-  <strong>Timers:</strong> SET REST counts down between sets &middot; NEXT EXERCISE counts down before moving on &nbsp;&nbsp;
+  <strong>Sets:</strong> Tap the set counter each completed set &middot; rest timer fires automatically &middot; last set fires next exercise timer &nbsp;&nbsp;
+  <strong>Planks:</strong> Tap stopwatch to time each set &middot; only saves if you beat your previous best &nbsp;&nbsp;
   <strong>Progression:</strong> Add weight when you hit the top of the rep range across all sets
 </div>
 
@@ -282,62 +130,85 @@ const STORAGE_KEY = 'mwf-weights-v1';
 const COMPOUND = new Set([
   'Smith Machine Bench Press','Smith Machine Overhead Press',
   'Smith Machine Incline Press','Smith Machine Shrugs',
-  'One-Arm LAT Pulldown','Smith Machine Bent-Over Row',
-  'Smith Machine Back Squat','Smith Machine Romanian Deadlift',
-  'Smith Machine Reverse Lunge','LAT Pulldown','Cable Seated Row'
+  'Smith Machine Bent-Over Row','Smith Machine Back Squat',
+  'Smith Machine Romanian Deadlift','Smith Machine Reverse Lunge',
+  'LAT Pulldown','Cable Seated Row','One-Arm LAT Pulldown',
+  'Hanging Knee Raises'
 ]);
 
 const WORKOUT = [
   {
-    day:'Monday', label:'PUSH', subtitle:'Chest · Shoulders · Triceps', accent:'#E8FF47',
-    exercises:[
-      {name:'Smith Machine Bench Press',    sets:'4',reps:'6-10',       usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-bench-press'},
-      {name:'Smith Machine Overhead Press', sets:'3',reps:'8-10',       usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-shoulder-press'},
-      {name:'Smith Machine Incline Press',  sets:'3',reps:'8-12',       usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-incline-bench-press'},
-      {name:'Cable Straight-Bar Pushdown',  sets:'3',reps:'10-15',      usesBar:false, link:'https://www.fitnessai.com/exercise/cable-push-down'},
-      {name:'Smith Machine Shrugs',         sets:'3',reps:'12-15',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-shrug'},
+    day: 'Monday', label: 'PUSH', subtitle: 'Chest · Shoulders · Triceps · Core', accent: '#E8FF47',
+    exercises: [
+      { name: 'Smith Machine Bench Press',    sets: '4', reps: '6-10',       usesBar: true,  link: 'https://www.fitnessai.com/exercise/smith-machine-bench-press' },
+      { name: 'Smith Machine Overhead Press', sets: '3', reps: '8-10',       usesBar: true,  link: 'https://www.fitnessai.com/exercise/smith-machine-shoulder-press' },
+      { name: 'Smith Machine Incline Press',  sets: '3', reps: '8-12',       usesBar: true,  link: 'https://www.fitnessai.com/exercise/smith-machine-incline-bench-press' },
+      { name: 'Cable Straight-Bar Pushdown',  sets: '3', reps: '10-15',      usesBar: false, link: 'https://www.fitnessai.com/exercise/cable-push-down' },
+      { name: 'Smith Machine Shrugs',         sets: '3', reps: '12-15',      usesBar: true,  link: 'https://www.fitnessai.com/exercise/smith-machine-shrug' },
+      { name: 'Hanging Knee Raises',          sets: '3', reps: '15',         usesBar: false, type: 'reps_only', link: 'https://www.fitnessai.com/exercise/hanging-knee-raise' },
     ]
   },
   {
-    day:'Wednesday', label:'PULL', subtitle:'Back · Biceps', accent:'#47CFFF',
-    exercises:[
-      {name:'One-Arm LAT Pulldown',         sets:'3',reps:'10-12 ea.',  usesBar:false, link:'https://www.fitnessai.com/exercise/one-arm-lat-pulldown'},
-      {name:'LAT Pulldown',                 sets:'4',reps:'8-12',       usesBar:false, link:'https://www.fitnessai.com/exercise/lat-pulldown'},
-      {name:'Cable Seated Row',             sets:'3',reps:'10-12',      usesBar:false, link:'https://www.fitnessai.com/exercise/cable-row-with-lat-bar'},
-      {name:'Cable Straight-Bar Curl',      sets:'3',reps:'10-15',      usesBar:false, link:'https://www.fitnessai.com/exercise/cable-curl-with-lat-bar'},
-      {name:'Smith Machine Bent-Over Row',  sets:'3',reps:'8-10',       usesBar:true,  link:'https://www.fitnessai.com/exercise/bent-over-row'},
+    day: 'Wednesday', label: 'LEGS', subtitle: 'Quads · Hamstrings · Glutes · Core', accent: '#FF6B47',
+    exercises: [
+      { name: 'Smith Machine Back Squat',         sets: '4', reps: '6-10',       usesBar: true,  link: 'https://www.fitnessai.com/exercise/squat' },
+      { name: 'Smith Machine Romanian Deadlift',  sets: '3', reps: '10-12',      usesBar: true,  link: 'https://www.fitnessai.com/exercise/dumbbell-romanian-deadlift' },
+      { name: 'Smith Machine Reverse Lunge',      sets: '3', reps: '10 ea. leg', usesBar: true,  link: 'https://www.fitnessai.com/exercise/dumbbell-backwards-lunge' },
+      { name: 'Smith Machine Calf Raise',         sets: '3', reps: '15-20',      usesBar: true,  link: 'https://www.fitnessai.com/exercise/smith-machine-calf-raise' },
+      { name: 'Cable Crunch',                     sets: '3', reps: '12-15',      usesBar: false, link: 'https://www.fitnessai.com/exercise/cable-seated-crunch' },
     ]
   },
   {
-    day:'Friday', label:'LEGS & CORE', subtitle:'Quads · Hamstrings · Glutes · Core', accent:'#FF6B47',
-    exercises:[
-      {name:'Smith Machine Back Squat',         sets:'4',reps:'6-10',       usesBar:true,  link:'https://www.fitnessai.com/exercise/squat'},
-      {name:'Smith Machine Romanian Deadlift',  sets:'3',reps:'10-12',      usesBar:true,  link:'https://www.fitnessai.com/exercise/dumbbell-romanian-deadlift'},
-      {name:'Smith Machine Reverse Lunge',      sets:'3',reps:'10 ea. leg', usesBar:true,  link:'https://www.fitnessai.com/exercise/dumbbell-backwards-lunge'},
-      {name:'Smith Machine Calf Raise',         sets:'3',reps:'15-20',      usesBar:true,  link:'https://www.fitnessai.com/exercise/smith-machine-calf-raise'},
-      {name:'Cable Crunch',                     sets:'3',reps:'12-15',      usesBar:false, link:'https://www.fitnessai.com/exercise/cable-seated-crunch'},
+    day: 'Friday', label: 'PULL', subtitle: 'Back · Biceps · Core', accent: '#47CFFF',
+    exercises: [
+      { name: 'One-Arm LAT Pulldown',         sets: '3', reps: '10-12 ea.',  usesBar: false, link: 'https://www.fitnessai.com/exercise/one-arm-lat-pulldown' },
+      { name: 'LAT Pulldown',                 sets: '4', reps: '8-12',       usesBar: false, link: 'https://www.fitnessai.com/exercise/lat-pulldown' },
+      { name: 'Cable Seated Row',             sets: '3', reps: '10-12',      usesBar: false, link: 'https://www.fitnessai.com/exercise/cable-row-with-lat-bar' },
+      { name: 'Cable Straight-Bar Curl',      sets: '3', reps: '10-15',      usesBar: false, link: 'https://www.fitnessai.com/exercise/cable-curl-with-lat-bar' },
+      { name: 'Smith Machine Bent-Over Row',  sets: '3', reps: '8-10',       usesBar: true,  link: 'https://www.fitnessai.com/exercise/bent-over-row' },
+      { name: 'Planks',                       sets: '3', reps: 'Max hold',   usesBar: false, type: 'plank',    link: 'https://www.fitnessai.com/exercise/plank' },
     ]
   }
 ];
 
-// ── Storage ──────────────────────────────────────────────────────────────────
+// ── Storage ───────────────────────────────────────────────────────────────────
 let weights = {};
 try { weights = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) {}
 
 let saveTimer = null;
-function scheduleGlobalSave() {
+function scheduleLocalSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(weights));
-      const el = document.getElementById('saveStatus');
-      el.classList.add('saved');
-      setTimeout(() => el.classList.remove('saved'), 2200);
+      showStatus('saved', '✓ SAVED', 2200);
     } catch(e) {}
+    if (API_URL) syncToSheets();
   }, 600);
 }
 
-// ── Timers & Set Counters ─────────────────────────────────────────────────────
+function showStatus(cls, msg, duration) {
+  const el = document.getElementById('saveStatus');
+  el.className = 'save-status ' + cls;
+  el.textContent = msg;
+  if (duration) setTimeout(() => { el.className = 'save-status'; el.textContent = '✓ SAVED'; }, duration);
+}
+
+// ── Google Sheets sync ────────────────────────────────────────────────────────
+function syncToSheets() {
+  if (!API_URL) return;
+  showStatus('syncing', '⟳ SYNCING', 0);
+  fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ app: 'Workout Tracker', data: weights })
+  })
+  .then(() => showStatus('saved', '✓ SYNCED', 2200))
+  .catch(() => showStatus('error', '✗ SYNC FAILED', 3000));
+}
+
+// ── Timers ────────────────────────────────────────────────────────────────────
 const activeTimers = {};
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 
@@ -346,10 +217,8 @@ function stopTimer(key) {
     clearInterval(activeTimers[key].interval);
     const { btn, countdownEl, seconds } = activeTimers[key];
     btn.classList.remove('active');
-    btn.style.color = '';
-    btn.style.borderColor = '';
-    btn.style.background = '';
-    countdownEl.textContent = fmt(seconds);
+    btn.style.color = ''; btn.style.borderColor = ''; btn.style.background = '';
+    if (countdownEl) countdownEl.textContent = fmt(seconds);
     delete activeTimers[key];
   }
 }
@@ -361,24 +230,49 @@ function startTimer(key, btn, countdownEl, seconds, accent) {
   btn.style.color = accent;
   btn.style.borderColor = accent + '99';
   btn.style.background = accent + '18';
-  countdownEl.textContent = fmt(remaining);
+  if (countdownEl) countdownEl.textContent = fmt(remaining);
   const interval = setInterval(() => {
     remaining--;
-    countdownEl.textContent = fmt(remaining);
+    if (countdownEl) countdownEl.textContent = fmt(remaining);
     if (remaining <= 0) {
       clearInterval(interval);
       delete activeTimers[key];
       btn.classList.remove('active');
-      btn.style.color = '';
-      btn.style.borderColor = '';
-      btn.style.background = '';
-      countdownEl.textContent = fmt(seconds);
+      btn.style.color = ''; btn.style.borderColor = ''; btn.style.background = '';
+      if (countdownEl) countdownEl.textContent = fmt(seconds);
     }
   }, 1000);
   activeTimers[key] = { interval, btn, countdownEl, seconds };
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+// ── Stopwatch ─────────────────────────────────────────────────────────────────
+const activeStopwatches = {};
+function startStopwatch(key, btn, displayEl, accent, onStop) {
+  if (activeStopwatches[key]) {
+    // Stop
+    clearInterval(activeStopwatches[key].interval);
+    const elapsed = activeStopwatches[key].elapsed;
+    delete activeStopwatches[key];
+    btn.classList.remove('running');
+    btn.style.color = ''; btn.style.borderColor = ''; btn.style.background = '';
+    btn.textContent = '▶ Start';
+    onStop(elapsed);
+    return;
+  }
+  let elapsed = 0;
+  btn.classList.add('running');
+  btn.style.color = accent; btn.style.borderColor = accent + '99'; btn.style.background = accent + '18';
+  btn.textContent = '■ Stop';
+  displayEl.textContent = fmt(0);
+  const interval = setInterval(() => {
+    elapsed++;
+    displayEl.textContent = fmt(elapsed);
+    activeStopwatches[key].elapsed = elapsed;
+  }, 1000);
+  activeStopwatches[key] = { interval, elapsed };
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   const container = document.getElementById('workout');
   container.innerHTML = '';
@@ -393,11 +287,7 @@ function render() {
     hdr.className = 'day-header';
     hdr.style.background = `linear-gradient(135deg,${a}12 0%,transparent 65%)`;
     hdr.style.boxShadow = `0 4px 40px ${a}0d`;
-    hdr.innerHTML = `
-      <span class="day-name" style="color:${a}">${day.day}</span>
-      <span class="day-label">${day.label}</span>
-      <span class="day-subtitle">${day.subtitle}</span>
-    `;
+    hdr.innerHTML = `<span class="day-name" style="color:${a}">${day.day}</span><span class="day-label">${day.label}</span><span class="day-subtitle">${day.subtitle}</span>`;
     section.appendChild(hdr);
 
     day.exercises.forEach((ex, idx) => {
@@ -405,256 +295,305 @@ function render() {
       const isCompound = COMPOUND.has(ex.name);
       const setRest = isCompound ? 90 : 60;
       const exRest = isCompound ? 120 : 75;
-      const savedVal = weights[ex.name] || '';
-      const plates = parseFloat(savedVal);
-      const hasInitVal = savedVal !== '' && savedVal !== null && savedVal !== undefined && !isNaN(plates);
-      const total = hasInitVal ? plates + (ex.usesBar ? BAR : 0) : null;
+      const totalSets = parseInt(ex.sets);
 
-      // ── Exercise card ──
       const card = document.createElement('div');
       card.className = 'exercise-card' + (isLast ? ' last' : '');
 
       // Top: demo + name
       const top = document.createElement('div');
       top.className = 'ex-top';
-
       const demoBtn = document.createElement('a');
-      demoBtn.href = ex.link;
-      demoBtn.target = '_blank';
-      demoBtn.rel = 'noopener noreferrer';
+      demoBtn.href = ex.link; demoBtn.target = '_blank'; demoBtn.rel = 'noopener noreferrer';
       demoBtn.className = 'demo-btn';
       demoBtn.textContent = '▶';
-      demoBtn.style.color = a;
-      demoBtn.style.borderColor = a + '55';
-      demoBtn.style.background = a + '10';
+      demoBtn.style.color = a; demoBtn.style.borderColor = a+'55'; demoBtn.style.background = a+'10';
       demoBtn.addEventListener('mouseenter', () => { demoBtn.style.background = a+'28'; demoBtn.style.borderColor = a; });
       demoBtn.addEventListener('mouseleave', () => { demoBtn.style.background = a+'10'; demoBtn.style.borderColor = a+'55'; });
-
       const nameSpan = document.createElement('span');
-      nameSpan.className = 'ex-name';
-      nameSpan.textContent = ex.name;
-
-      top.appendChild(demoBtn);
-      top.appendChild(nameSpan);
+      nameSpan.className = 'ex-name'; nameSpan.textContent = ex.name;
+      top.appendChild(demoBtn); top.appendChild(nameSpan);
       card.appendChild(top);
 
-      // Meta: sets + reps
+      // Meta
       const meta = document.createElement('div');
       meta.className = 'ex-meta';
-      meta.innerHTML = `
-        <span class="sets-badge" style="color:${a};background:${a}18">${ex.sets} sets</span>
-        <span class="reps-badge">${ex.reps} reps</span>
-      `;
+      const setsEl = document.createElement('span');
+      setsEl.className = 'sets-badge';
+      setsEl.style.color = a; setsEl.style.background = a+'18';
+      setsEl.textContent = ex.sets + ' sets';
+      const repsEl = document.createElement('span');
+      repsEl.className = 'reps-badge';
+      repsEl.textContent = ex.reps + ' reps';
+      meta.appendChild(setsEl); meta.appendChild(repsEl);
       card.appendChild(meta);
 
-      // Weight row
-      const weightRow = document.createElement('div');
-      weightRow.className = 'weight-row';
+      // ── PLANK exercise ──────────────────────────────────────────────────────
+      if (ex.type === 'plank') {
+        for (let s = 1; s <= totalSets; s++) {
+          const plankKey = ex.name + '-set' + s;
+          const savedTime = weights[plankKey] || 0;
 
-      const wLabel = document.createElement('span');
-      wLabel.className = 'weight-label';
-      wLabel.textContent = ex.usesBar ? 'PLATES' : 'WEIGHT';
+          const plankRow = document.createElement('div');
+          plankRow.className = 'plank-row';
 
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.min = '0';
-      input.step = '5';
-      input.placeholder = '--';
-      input.className = 'weight-input';
-      input.value = savedVal;
-      if (savedVal) {
-        input.style.borderColor = a + '60';
-        input.style.background = a + '12';
-        input.style.color = '#fff';
-      }
+          const plankLbl = document.createElement('span');
+          plankLbl.className = 'plank-set-label';
+          plankLbl.textContent = 'SET ' + s;
 
-      const totalLabel = document.createElement('span');
-      totalLabel.className = 'weight-label';
-      totalLabel.style.width = 'auto';
-      totalLabel.style.marginRight = '4px';
-      totalLabel.textContent = ex.usesBar ? 'Total Weight (inc. bar):' : 'Total Weight:';
+          const timeDisplay = document.createElement('span');
+          timeDisplay.className = 'plank-time-display' + (savedTime ? ' has-time' : '');
+          timeDisplay.style.color = savedTime ? a : '';
+          timeDisplay.style.borderColor = savedTime ? a+'60' : '';
+          timeDisplay.style.background = savedTime ? a+'12' : '';
+          timeDisplay.textContent = savedTime ? fmt(savedTime) : '--:--';
 
-      const totalEl = document.createElement('span');
-      if (total !== null) {
-        totalEl.className = 'total-badge';
-        totalEl.style.color = a;
-        totalEl.style.background = a + '18';
-        totalEl.textContent = total + ' lbs';
-      } else {
-        totalEl.className = 'total-dash';
-        totalEl.textContent = '--';
-      }
+          const swBtn = document.createElement('button');
+          swBtn.className = 'stopwatch-btn';
+          swBtn.textContent = '▶ Start';
+          swBtn.style.color = '#555';
 
-      input.addEventListener('focus', () => {
-        input.style.borderColor = a;
-        input.style.background = a + '20';
-        input.style.color = '#fff';
-      });
-      input.addEventListener('blur', () => {
-        const v = input.value;
-        input.style.borderColor = v ? a+'60' : 'rgba(255,255,255,0.1)';
-        input.style.background = v ? a+'12' : 'rgba(255,255,255,0.04)';
-        input.style.color = v ? '#fff' : '#555';
-      });
-      input.addEventListener('input', () => {
-        const v = input.value;
-        weights[ex.name] = v;
-        scheduleGlobalSave();
-        const p = parseFloat(v);
-        const hasValue = v !== '' && v !== null && !isNaN(p);
-        const t = hasValue ? p + (ex.usesBar ? BAR : 0) : null;
-        if (t !== null) {
-          totalEl.className = 'total-badge';
-          totalEl.style.color = a;
-          totalEl.style.background = a + '18';
-          totalEl.textContent = t + ' lbs';
-        } else {
-          totalEl.className = 'total-dash';
-          totalEl.style.color = '';
-          totalEl.style.background = '';
-          totalEl.textContent = '--';
-        }
-        // label never needs to change
-      });
-
-      weightRow.appendChild(wLabel);
-      weightRow.appendChild(input);
-      card.appendChild(weightRow);
-
-      // Total row
-      const totalRow = document.createElement('div');
-      totalRow.className = 'weight-row';
-      totalRow.style.marginBottom = '10px';
-      totalRow.appendChild(totalLabel);
-      totalRow.appendChild(totalEl);
-      card.appendChild(totalRow);
-
-      // Set counter + inline set rest timer
-      const timerRow = document.createElement('div');
-      timerRow.className = 'timer-row';
-      timerRow.style.alignItems = 'center';
-      timerRow.style.gap = '10px';
-
-      const totalSets = parseInt(ex.sets);
-      let setCount = 0;
-
-      // Set counter button
-      const counterBtn = document.createElement('button');
-      counterBtn.className = 'timer-btn';
-      counterBtn.style.fontWeight = '700';
-      counterBtn.style.fontSize = '12px';
-      counterBtn.style.padding = '5px 12px';
-      counterBtn.textContent = 'Set 0/' + totalSets;
-
-      // Inline set rest timer (hidden until a set is logged)
-      const setTimerBtn = document.createElement('button');
-      setTimerBtn.className = 'timer-btn';
-      setTimerBtn.style.display = 'none';
-      const setTimerStatic = document.createElement('span');
-      setTimerStatic.style.pointerEvents = 'none';
-      setTimerStatic.textContent = '\u23F1 Rest ';
-      const setTimerCountdown = document.createElement('span');
-      setTimerCountdown.style.pointerEvents = 'none';
-      setTimerCountdown.textContent = fmt(setRest);
-      setTimerBtn.appendChild(setTimerStatic);
-      setTimerBtn.appendChild(setTimerCountdown);
-      const setTimerKey = day.day + '-' + ex.name + '-set';
-      setTimerBtn.addEventListener('click', () => startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a));
-
-      counterBtn.addEventListener('click', () => {
-        if (setCount >= totalSets) return; // locked at max
-        setCount++;
-        const isMax = setCount === totalSets;
-
-        // Update counter label
-        counterBtn.textContent = 'Set ' + setCount + '/' + totalSets;
-        counterBtn.style.color = isMax ? a : '';
-        counterBtn.style.borderColor = isMax ? a + '99' : '';
-        counterBtn.style.background = isMax ? a + '18' : '';
-
-        if (isMax) {
-          // Stop set rest timer, hide it, fire next exercise timer
-          stopTimer(setTimerKey);
-          setTimerBtn.style.display = 'none';
-          // Fire the between-row next exercise timer
-          if (nextExBtn) {
-            const nextKey = day.day + '-' + ex.name + '-ex';
-            stopTimer(nextKey);
-            startTimer(nextKey, nextExBtn, nextExCountdown, exRest, a);
-          }
-        } else {
-          // Start/restart set rest timer
-          setTimerBtn.style.display = '';
-          startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a);
-        }
-
-        // If this is the last exercise of the day and it hit max, reset all counters
-        if (isMax && isLast) {
-          setTimeout(() => {
-            // Reset all counter buttons in this day section
-            section.querySelectorAll('.set-counter-btn').forEach(btn => {
-              btn.textContent = btn.dataset.resetLabel;
-              btn.style.color = '';
-              btn.style.borderColor = '';
-              btn.style.background = '';
-              btn._setCount = 0;
+          const swKey = day.day + '-' + ex.name + '-sw' + s;
+          swBtn.addEventListener('click', () => {
+            startStopwatch(swKey, swBtn, timeDisplay, a, (elapsed) => {
+              // Only save if it beats previous best
+              const prev = weights[plankKey] || 0;
+              if (elapsed > prev) {
+                weights[plankKey] = elapsed;
+                timeDisplay.textContent = fmt(elapsed);
+                timeDisplay.className = 'plank-time-display has-time';
+                timeDisplay.style.color = a;
+                timeDisplay.style.borderColor = a+'60';
+                timeDisplay.style.background = a+'12';
+                scheduleLocalSave();
+              } else {
+                // Revert display to saved best
+                timeDisplay.textContent = prev ? fmt(prev) : '--:--';
+              }
             });
-            // Hide all inline timers
-            section.querySelectorAll('.set-timer-inline').forEach(t => { t.style.display = 'none'; });
-          }, 1500);
+          });
+
+          plankRow.appendChild(plankLbl);
+          plankRow.appendChild(timeDisplay);
+          plankRow.appendChild(swBtn);
+          card.appendChild(plankRow);
         }
-      });
 
-      // Tag for reset
-      counterBtn.classList.add('set-counter-btn');
-      counterBtn.dataset.resetLabel = 'Set 0/' + totalSets;
-      counterBtn._setCount = 0;
-      // Patch setCount to use element property for reset
-      counterBtn.addEventListener('click', () => { counterBtn._setCount = setCount; });
-      setTimerBtn.classList.add('set-timer-inline');
+        // Set counter for plank (still tracks completion)
+        const plankTimerRow = document.createElement('div');
+        plankTimerRow.className = 'timer-row';
+        plankTimerRow.style.marginTop = '10px';
 
-      timerRow.appendChild(counterBtn);
-      timerRow.appendChild(setTimerBtn);
-      card.appendChild(timerRow);
+        let plankCount = 0;
+        const plankCounterBtn = document.createElement('button');
+        plankCounterBtn.className = 'timer-btn set-counter-btn';
+        plankCounterBtn.textContent = 'Set 0/' + totalSets;
+        plankCounterBtn.dataset.resetLabel = 'Set 0/' + totalSets;
+        plankCounterBtn.classList.add('set-counter-btn');
 
-      // nextExBtn reference — will be set when between-row is created
-      let nextExBtn = null;
-      let nextExCountdown = null;
+        const plankTimerBtn = document.createElement('button');
+        plankTimerBtn.className = 'timer-btn set-timer-inline';
+        plankTimerBtn.style.display = 'none';
+        const plankTimerStatic = document.createElement('span');
+        plankTimerStatic.style.pointerEvents = 'none';
+        plankTimerStatic.textContent = '⏱ Rest ';
+        const plankTimerCountdown = document.createElement('span');
+        plankTimerCountdown.style.pointerEvents = 'none';
+        plankTimerCountdown.textContent = fmt(setRest);
+        plankTimerBtn.appendChild(plankTimerStatic);
+        plankTimerBtn.appendChild(plankTimerCountdown);
+        const plankSetKey = day.day + '-' + ex.name + '-set';
+        plankTimerBtn.addEventListener('click', () => startTimer(plankSetKey, plankTimerBtn, plankTimerCountdown, setRest, a));
+
+        let plankNextBtn = null, plankNextCountdown = null;
+
+        plankCounterBtn.addEventListener('click', () => {
+          if (plankCount >= totalSets) return;
+          plankCount++;
+          const isMax = plankCount === totalSets;
+          plankCounterBtn.textContent = 'Set ' + plankCount + '/' + totalSets;
+          plankCounterBtn.style.color = isMax ? a : '';
+          plankCounterBtn.style.borderColor = isMax ? a+'99' : '';
+          plankCounterBtn.style.background = isMax ? a+'18' : '';
+          if (isMax) {
+            stopTimer(plankSetKey);
+            plankTimerBtn.style.display = 'none';
+            if (plankNextBtn) startTimer(day.day+'-'+ex.name+'-ex', plankNextBtn, plankNextCountdown, exRest, a);
+            if (isLast) {
+              setTimeout(() => {
+                section.querySelectorAll('.set-counter-btn').forEach(b => {
+                  b.textContent = b.dataset.resetLabel;
+                  b.style.color = ''; b.style.borderColor = ''; b.style.background = '';
+                  b._count = 0;
+                });
+                section.querySelectorAll('.set-timer-inline').forEach(t => t.style.display = 'none');
+              }, 1500);
+            }
+          } else {
+            plankTimerBtn.style.display = '';
+            startTimer(plankSetKey, plankTimerBtn, plankTimerCountdown, setRest, a);
+          }
+        });
+
+        plankTimerRow.appendChild(plankCounterBtn);
+        plankTimerRow.appendChild(plankTimerBtn);
+        card.appendChild(plankTimerRow);
+
+        section.appendChild(card);
+        if (!isLast) {
+          const between = makeBetweenRow(a, ex, day, exRest, (btn, cd) => { plankNextBtn = btn; plankNextCountdown = cd; });
+          section.appendChild(between);
+        }
+        return;
+      }
+
+      // ── REPS ONLY exercise (Hanging Knee Raises) ────────────────────────────
+      if (ex.type === 'reps_only') {
+        const repsKey = ex.name + '-target';
+        const savedTarget = weights[repsKey] || 15;
+
+        const repsTargetRow = document.createElement('div');
+        repsTargetRow.className = 'reps-target-row';
+        const repsTargetLbl = document.createElement('span');
+        repsTargetLbl.className = 'reps-target-label';
+        repsTargetLbl.textContent = 'TARGET REPS';
+        const repsTargetInput = document.createElement('input');
+        repsTargetInput.type = 'number'; repsTargetInput.min = '1'; repsTargetInput.step = '1';
+        repsTargetInput.className = 'reps-target-input';
+        repsTargetInput.value = savedTarget;
+        repsTargetInput.style.borderColor = a+'60'; repsTargetInput.style.background = a+'12'; repsTargetInput.style.color = '#fff';
+        repsTargetInput.addEventListener('focus', () => { repsTargetInput.style.borderColor = a; repsTargetInput.style.background = a+'20'; });
+        repsTargetInput.addEventListener('blur', () => { repsTargetInput.style.borderColor = a+'60'; repsTargetInput.style.background = a+'12'; });
+        repsTargetInput.addEventListener('input', () => {
+          weights[repsKey] = parseInt(repsTargetInput.value) || 15;
+          scheduleLocalSave();
+          // Update the reps badge
+          repsEl.textContent = repsTargetInput.value + ' reps';
+        });
+        repsTargetRow.appendChild(repsTargetLbl); repsTargetRow.appendChild(repsTargetInput);
+        card.appendChild(repsTargetRow);
+
+        // Update reps badge to show saved target
+        repsEl.textContent = savedTarget + ' reps';
+      }
+
+      // ── STANDARD weight exercises ───────────────────────────────────────────
+      if (!ex.type || ex.type === 'reps_only') {
+        if (!ex.type) {
+          const savedVal = weights[ex.name] || '';
+          const plates = parseFloat(savedVal);
+          const hasInitVal = savedVal !== '' && !isNaN(plates);
+          const total = hasInitVal ? plates + (ex.usesBar ? BAR : 0) : null;
+
+          // Plates/weight input
+          const weightRow = document.createElement('div');
+          weightRow.className = 'weight-row';
+          const wLabel = document.createElement('span');
+          wLabel.className = 'weight-label';
+          wLabel.textContent = ex.usesBar ? 'PLATES' : 'WEIGHT';
+          const input = document.createElement('input');
+          input.type = 'number'; input.min = '0'; input.step = '5'; input.placeholder = '--';
+          input.className = 'weight-input'; input.value = savedVal;
+          if (savedVal !== '') {
+            input.style.borderColor = a+'60'; input.style.background = a+'12'; input.style.color = '#fff';
+          }
+          input.addEventListener('focus', () => { input.style.borderColor = a; input.style.background = a+'20'; input.style.color = '#fff'; });
+          input.addEventListener('blur', () => {
+            const v = input.value;
+            input.style.borderColor = v !== '' ? a+'60' : 'rgba(255,255,255,0.1)';
+            input.style.background = v !== '' ? a+'12' : 'rgba(255,255,255,0.04)';
+            input.style.color = v !== '' ? '#fff' : '#555';
+          });
+
+          const totalEl = document.createElement('span');
+          if (total !== null) {
+            totalEl.className = 'total-badge'; totalEl.style.color = a; totalEl.style.background = a+'18';
+            totalEl.textContent = total + ' lbs';
+          } else { totalEl.className = 'total-dash'; totalEl.textContent = '--'; }
+
+          input.addEventListener('input', () => {
+            const v = input.value;
+            weights[ex.name] = v; scheduleLocalSave();
+            const p = parseFloat(v);
+            const hasValue = v !== '' && !isNaN(p);
+            const t = hasValue ? p + (ex.usesBar ? BAR : 0) : null;
+            if (t !== null) { totalEl.className = 'total-badge'; totalEl.style.color = a; totalEl.style.background = a+'18'; totalEl.textContent = t + ' lbs'; }
+            else { totalEl.className = 'total-dash'; totalEl.style.color = ''; totalEl.style.background = ''; totalEl.textContent = '--'; }
+          });
+
+          weightRow.appendChild(wLabel); weightRow.appendChild(input);
+          card.appendChild(weightRow);
+
+          // Total row
+          const totalRow = document.createElement('div');
+          totalRow.className = 'weight-row'; totalRow.style.marginBottom = '10px';
+          const totalLbl = document.createElement('span');
+          totalLbl.className = 'total-label';
+          totalLbl.textContent = ex.usesBar ? 'Total Weight (inc. bar):' : 'Total Weight:';
+          totalRow.appendChild(totalLbl); totalRow.appendChild(totalEl);
+          card.appendChild(totalRow);
+        }
+
+        // Set counter + inline rest timer
+        const timerRow = document.createElement('div');
+        timerRow.className = 'timer-row';
+
+        let setCount = 0;
+        const counterBtn = document.createElement('button');
+        counterBtn.className = 'timer-btn set-counter-btn';
+        counterBtn.textContent = 'Set 0/' + totalSets;
+        counterBtn.dataset.resetLabel = 'Set 0/' + totalSets;
+        counterBtn._count = 0;
+
+        const setTimerBtn = document.createElement('button');
+        setTimerBtn.className = 'timer-btn set-timer-inline';
+        setTimerBtn.style.display = 'none';
+        const setTimerStatic = document.createElement('span');
+        setTimerStatic.style.pointerEvents = 'none'; setTimerStatic.textContent = '⏱ Rest ';
+        const setTimerCountdown = document.createElement('span');
+        setTimerCountdown.style.pointerEvents = 'none'; setTimerCountdown.textContent = fmt(setRest);
+        setTimerBtn.appendChild(setTimerStatic); setTimerBtn.appendChild(setTimerCountdown);
+        const setTimerKey = day.day + '-' + ex.name + '-set';
+        setTimerBtn.addEventListener('click', () => startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a));
+
+        let nextExBtn = null, nextExCountdown = null;
+
+        counterBtn.addEventListener('click', () => {
+          if (setCount >= totalSets) return;
+          setCount++;
+          counterBtn._count = setCount;
+          const isMax = setCount === totalSets;
+          counterBtn.textContent = 'Set ' + setCount + '/' + totalSets;
+          counterBtn.style.color = isMax ? a : '';
+          counterBtn.style.borderColor = isMax ? a+'99' : '';
+          counterBtn.style.background = isMax ? a+'18' : '';
+          if (isMax) {
+            stopTimer(setTimerKey);
+            setTimerBtn.style.display = 'none';
+            if (nextExBtn) startTimer(day.day+'-'+ex.name+'-ex', nextExBtn, nextExCountdown, exRest, a);
+            if (isLast) {
+              setTimeout(() => {
+                section.querySelectorAll('.set-counter-btn').forEach(b => {
+                  b.textContent = b.dataset.resetLabel; b.style.color = ''; b.style.borderColor = ''; b.style.background = ''; b._count = 0;
+                });
+                section.querySelectorAll('.set-timer-inline').forEach(t => t.style.display = 'none');
+              }, 1500);
+            }
+          } else {
+            setTimerBtn.style.display = '';
+            startTimer(setTimerKey, setTimerBtn, setTimerCountdown, setRest, a);
+          }
+        });
+
+        timerRow.appendChild(counterBtn); timerRow.appendChild(setTimerBtn);
+        card.appendChild(timerRow);
+      }
 
       section.appendChild(card);
 
-      // ── Between-exercise row (with next-ex timer) ──
+      // Between row
       if (!isLast) {
-        const between = document.createElement('div');
-        between.className = 'between-row';
-
-        const lbl = document.createElement('span');
-        lbl.className = 'between-label';
-        lbl.textContent = 'next exercise';
-
-        const line = document.createElement('div');
-        line.className = 'between-line';
-
-        const exBtn = document.createElement('button');
-        exBtn.className = 'timer-btn';
-        const exKey = day.day + '-' + ex.name + '-ex';
-        const exStaticLabel = document.createElement('span');
-        exStaticLabel.textContent = '\u23F1 Next Ex ';
-        exStaticLabel.style.pointerEvents = 'none';
-        const exCountdown = document.createElement('span');
-        exCountdown.textContent = fmt(exRest);
-        exCountdown.style.pointerEvents = 'none';
-        exBtn.appendChild(exStaticLabel);
-        exBtn.appendChild(exCountdown);
-        exBtn.addEventListener('click', () => startTimer(exKey, exBtn, exCountdown, exRest, a));
-
-        // Wire up reference so set counter can fire this timer
-        nextExBtn = exBtn;
-        nextExCountdown = exCountdown;
-
-        between.appendChild(lbl);
-        between.appendChild(line);
-        between.appendChild(exBtn);
+        const between = makeBetweenRow(a, ex, day, exRest, (btn, cd) => { nextExBtn = btn; nextExCountdown = cd; });
         section.appendChild(between);
       }
     });
@@ -663,13 +602,26 @@ function render() {
   });
 }
 
+function makeBetweenRow(a, ex, day, exRest, wireCallback) {
+  const between = document.createElement('div');
+  between.className = 'between-row';
+  const lbl = document.createElement('span'); lbl.className = 'between-label'; lbl.textContent = 'next exercise';
+  const line = document.createElement('div'); line.className = 'between-line';
+  const exBtn = document.createElement('button'); exBtn.className = 'timer-btn';
+  const exKey = day.day + '-' + ex.name + '-ex';
+  const exStaticLabel = document.createElement('span'); exStaticLabel.style.pointerEvents = 'none'; exStaticLabel.textContent = '⏱ Next Ex ';
+  const exCountdown = document.createElement('span'); exCountdown.style.pointerEvents = 'none'; exCountdown.textContent = fmt(exRest);
+  exBtn.appendChild(exStaticLabel); exBtn.appendChild(exCountdown);
+  exBtn.addEventListener('click', () => startTimer(exKey, exBtn, exCountdown, exRest, a));
+  wireCallback(exBtn, exCountdown);
+  between.appendChild(lbl); between.appendChild(line); between.appendChild(exBtn);
+  return between;
+}
+
 render();
 
-// Force check for updates every time app is opened
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.unregister());
-  });
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
 </script>
 </body>
